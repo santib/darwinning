@@ -1,11 +1,11 @@
 module Darwinning
   module EvolutionTypes
-
     class Mutation
-      attr_reader :mutation_rate
+      attr_reader :mutation_method, :mutation_rate
 
       def initialize(options = {})
         @mutation_rate = options.fetch(:mutation_rate, 0.0)
+        @mutation_method = options.fetch(:mutation_method, :re_express_random_genotype)
       end
 
       def evolve(members)
@@ -21,7 +21,7 @@ module Darwinning
       def mutate(members)
         members.map do |member|
           if rand < mutation_rate
-            re_express_random_genotype(member)
+            send(mutation_method, member)
           else
             member
           end
@@ -41,7 +41,24 @@ module Darwinning
 
         member
       end
-    end
 
+      # Selects two random genotypes and swaps them
+      def interchange_random_genotypes(member)
+        gene1, gene2 = member.genes.sample(2)
+
+        genotype1 = member.genotypes[gene1]
+        genotype2 = member.genotypes[gene2]
+
+        if member.class.superclass == Darwinning::Organism
+          member.genotypes[gene1] = genotype2
+          member.genotypes[gene2] = genotype1
+        else
+          member.send("#{gene1.name}=", genotype2)
+          member.send("#{gene2.name}=", genotype1)
+        end
+
+        member
+      end
+    end
   end
 end
